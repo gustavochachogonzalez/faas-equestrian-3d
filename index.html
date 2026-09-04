@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>FAAS Equestrian 3D Academy — Equitación Punta del Este</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+<header>
+ <button class="btn mobileToggle" id="leftToggle">☰</button>
+ <div class="brand">FAAS EQUESTRIAN 3D ACADEMY <small>Course Designer · WEB v1.0 · by Equitación Punta del Este</small></div>
+ <div class="spacer"></div>
+ <button class="btn desktopOnly" id="viewTop">Vista cenital</button>
+ <button class="btn desktopOnly" id="view3d">Vista 3D</button>
+ <button class="btn" id="testJS">TEST JS</button><button class="btn primary" id="play">▶ Recorrido</button>
+ <button class="btn mobileToggle" id="rightToggle">⚙</button>
+</header>
+<main>
+ <aside class="panel" id="leftPanel">
+  <h3>1 · Arena</h3>
+  <div class="card grid2">
+   <div class="field"><label>Ancho (m)</label><input id="arenaW" type="number" value="80" min="20" max="150"></div>
+   <div class="field"><label>Largo (m)</label><input id="arenaH" type="number" value="60" min="20" max="150"></div>
+  </div>
+  <h3>2 · Biblioteca</h3>
+  <div class="library">
+   <div class="jump" data-type="Vertical"><b>║</b><span>Vertical</span></div>
+   <div class="jump" data-type="Oxer"><b>╫</b><span>Oxer</span></div>
+   <div class="jump" data-type="Muro"><b>▰</b><span>Muro</span></div>
+   <div class="jump" data-type="Liverpool"><b>▱</b><span>Liverpool</span></div>
+   <div class="jump" data-type="Triple"><b>≡</b><span>Triple</span></div>
+   <div class="jump" data-type="Doble"><b>Ⅱ</b><span>Doble</span></div>
+  </div>
+  <p class="tiny">Toca un tipo y luego toca la pista para colocarlo. Arrastra un obstáculo para moverlo.</p>
+  <h3>3 · Recorrido</h3>
+  <div class="card">
+   <div class="row"><button class="btn" id="routeMode">Definir orden</button><button class="btn" id="clearRoute">Borrar línea</button></div>
+   <p class="tiny">Activa “Definir orden” y toca los obstáculos en la secuencia deseada.</p>
+  </div>
+  <h3>Proyecto</h3>
+  <div class="card">
+   <div class="row"><button class="btn" id="saveBtn">Guardar JSON</button><button class="btn" id="loadBtn">Abrir JSON</button></div>
+   <input id="fileInput" type="file" accept=".json,application/json" hidden>
+   <button class="btn" id="demoBtn" style="width:100%;margin-top:8px">Cargar recorrido demo</button>
+  </div>
+ </aside>
+
+ <section class="stage" id="stage">
+  <canvas id="c"></canvas>
+  <div class="hud">
+   <div class="pill" id="modePill">Modo: seleccionar</div>
+   <div class="pill" id="camPill">Cámara: 3D</div>
+   <div class="pill" id="countPill">0 obstáculos</div>
+  </div>
+  <div class="help">Arrastrar: mover obstáculo · rueda/pellizco: zoom · fondo: orbitar en 3D · doble toque: seleccionar</div>
+ </section>
+
+ <aside class="panel right" id="rightPanel">
+  <h3>Inspector</h3>
+  <div class="card" id="emptyInspector"><span class="tiny">Selecciona un obstáculo para editarlo.</span></div>
+  <div class="card" id="inspector" style="display:none">
+   <div class="field"><label>Tipo</label><select id="iType"><option>Vertical</option><option>Oxer</option><option>Muro</option><option>Liverpool</option><option>Triple</option><option>Doble</option></select></div>
+   <div class="grid2">
+    <div class="field"><label>Número</label><input id="iNum" type="text"></div>
+    <div class="field"><label>Rotación °</label><input id="iRot" type="number"></div>
+    <div class="field"><label>Altura m</label><input id="iHeight" type="number" step=".05"></div>
+    <div class="field"><label>Ancho m</label><input id="iWidth" type="number" step=".1"></div>
+   </div>
+   <div class="row"><button class="btn" id="duplicate">Duplicar</button><button class="btn danger" id="delete">Eliminar</button></div>
+  </div>
+  <h3>Orden del recorrido</h3>
+  <div class="list" id="routeList"></div>
+  <h3>Efectos 3D</h3>
+  <div class="card">
+   <div class="field"><label>Altura cámara</label><input id="pitch" type="range" min="15" max="75" value="48"></div>
+   <div class="field"><label>Rotación cámara</label><input id="yaw" type="range" min="-180" max="180" value="-32"></div>
+   <div class="field"><label>Zoom</label><input id="zoom" type="range" min="5" max="18" value="10"></div>
+   <label class="row"><input id="shadows" type="checkbox" checked style="width:auto;flex:0"> <span>Sombras</span></label>
+   <label class="row"><input id="grid" type="checkbox" checked style="width:auto;flex:0"> <span>Cuadrícula</span></label>
+  </div>
+ </aside>
+</main>
+<footer><span class="status" id="status">● Cargando JavaScript…</span><span>· Sin librerías externas · Web App optimizada para Safari/iPad</span><span class="spacer"></span><span id="fps"></span></footer>
+</div>
+<script src="app.js" defer></script>
+</body>
+</html>
