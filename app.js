@@ -2,6 +2,7 @@
 const $=s=>document.querySelector(s),canvas=$('#c'),ctx=canvas.getContext('2d');
 let W=80,H=60,objects=[],selected=null,placeType=null,routeMode=false,connectMode=false,connectionDraft=null,route=[],view='3d',drag=null,orbitDrag=null,draft=null,routeSelection=null,routeDrag=null,obstacleDrag=null;
 let yaw=-32*Math.PI/180,pitch=48*Math.PI/180,zoom=10,anim=false,progress=0,last=performance.now(),showGrid=true,showShadows=true;
+let geometryConnectMode=false,geometryConnectSource=null,executionQueue=[],executionIndex=0,executionProgress=0,executionRunning=false;
 const MAX_HISTORY=4;let past=[],future=[];
 const colors={Vertical:'#f7f3e8',Oxer:'#f6bd60',Muro:'#e76f51',Liverpool:'#48cae4',Triple:'#90be6d',Doble:'#c77dff'};
 const uid=()=> 'p3d_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2);
@@ -83,7 +84,6 @@ $('#addLinePoint').onclick=()=>{let n=lineNode();if(!n||n.kind==='circle')return
 $('#deleteLinePoint').onclick=()=>{let n=lineNode();if(!n||!['curve','connection'].includes(n.kind)||n.points.length<=3)return;history();n.points.splice(n.points.length-2,1);updateUI();draw();status('Punto eliminado')};
 canvas.addEventListener('pointermove',e=>{if(!routeDrag||routeDrag.index==='move')return;let n=routeDrag.node,q=pointerPos(e),p=unproject(q.x,q.y);if(n.kind==='connection'&&typeof routeDrag.index==='number'){if(routeDrag.index>0&&routeDrag.index<n.points.length-1)n.points[routeDrag.index]={x:p.x,y:p.y};draw()}else if(n.kind==='circle'){if(routeDrag.index==='center'){n.cx=p.x;n.cy=p.y}else if(routeDrag.index==='radius')n.r=Math.max(1,Math.min(40,Math.hypot(p.x-n.cx,p.y-n.cy)));draw()}},{passive:true});
 // Advanced route layer: styles, generic joins, ordered execution and course control points.
-let geometryConnectMode=false,geometryConnectSource=null,executionQueue=[],executionIndex=0,executionProgress=0,executionRunning=false;
 function isCourseNode(n){return n.kind==='obstacle'||n.kind==='point'||n.kind==='courseControl'||(n.kind==='connection'&&n.course!==false&&n.fromObstacleId&&n.toObstacleId)}
 function nodePoints(n){if(n.kind==='courseControl')return[{x:n.x,y:n.y}];if(n.kind==='obstacle'){let o=objects.find(x=>x.id===n.objectId);return[{x:o?o.x:n.x,y:o?o.y:n.y}]}if(n.kind==='line')return[n.a,n.b];if(n.kind==='curve'||n.kind==='connection'){if(n.kind==='connection')syncConnections();return n.points||[]}if(n.kind==='circle'){let a=[];for(let i=0;i<=32;i++){let t=i/32*Math.PI*2;a.push({x:n.cx+Math.cos(t)*n.r,y:n.cy+Math.sin(t)*n.r})}return a}return[{x:n.x,y:n.y}]}
 function routeStyle(n){return{color:n.color|| (n.kind==='connection'?'#57e389':n.arrow?'#ffd166':n.kind==='circle'?'#ffd166':'#8de1ff'),width:+n.width|| (n.kind==='connection'?5:n.kind==='circle'?3:4),dash:n.dash==='dashed'?[10,8]:[]}}
