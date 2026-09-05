@@ -15,6 +15,11 @@ The current working slice adds:
 - red handle for obstacle height adjustment with mouse or touch;
 - PNG export with a dated filename for sharing in Drive;
 - connector mode with entry/exit points for independent obstacle-to-obstacle course segments;
+- Parkour-style separated obstacle controls with guide lines;
+- green editable handles for lines, arrows, curves, connections and circles;
+- independent line actions in the right inspector: duplicate, delete, add point and remove point;
+- linked connection endpoints that remain attached while intermediate points are edited;
+- line duplication that creates an independent editable copy.
 
 ## Auditoría de la v1.0
 
@@ -24,6 +29,14 @@ The current working slice adds:
 - colocación, arrastre, duplicado, inspector, numeración y tipos básicos de obstáculos;
 - animación de recorrido, cuadrícula, sombras, controles de cámara y demo reproducible;
 - diseño responsive inicial y guardado local en JSON.
+
+### Bloque integrado actual
+
+- rotation, height and width controls use independent touch targets;
+- deleting an obstacle preserves route geometry and detaches affected connections;
+- moving a linked obstacle updates the connected line endpoints;
+- lines, arrows, curves and circles can be selected and edited directly on the arena;
+- curve and circle creation remains performed on the editing track, not in the sidebar.
 
 ### Próximas prioridades
 
