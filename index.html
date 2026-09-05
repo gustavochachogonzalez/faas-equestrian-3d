@@ -14,7 +14,9 @@
  <div class="spacer"></div>
  <button class="btn desktopOnly" id="viewTop">Vista cenital</button>
  <button class="btn desktopOnly" id="view3d">Vista 3D</button>
- <button class="btn" id="testJS">TEST JS</button><button class="btn primary" id="play">▶ Recorrido</button>
+ <button class="btn" id="undo" title="Deshacer (hasta 4 movimientos)" aria-label="Deshacer">↶</button>
+ <button class="btn" id="redo" title="Rehacer (hasta 4 movimientos)" aria-label="Rehacer">↷</button>
+ <button class="btn primary" id="play">▶ Recorrido</button>
  <button class="btn mobileToggle" id="rightToggle">⚙</button>
 </header>
 <main>
@@ -25,7 +27,13 @@
    <div class="field"><label>Largo (m)</label><input id="arenaH" type="number" value="60" min="20" max="150"></div>
   </div>
   <h3>2 · Biblioteca</h3>
-  <div class="library">
+   <div class="library">
+    <div class="jump routeTool" data-tool="start"><b>●</b><span>Salida</span></div>
+    <div class="jump routeTool" data-tool="finish"><b>◆</b><span>Llegada</span></div>
+    <div class="jump routeTool" data-tool="line"><b>—</b><span>Línea recta</span></div>
+    <div class="jump routeTool" data-tool="lineArrow"><b>→</b><span>Línea con flecha</span></div>
+    <div class="jump routeTool" data-tool="curve"><b>⌒</b><span>Curva editable</span></div>
+    <div class="jump routeTool" data-tool="circle"><b>○</b><span>Círculo</span></div>
    <div class="jump" data-type="Vertical"><b>║</b><span>Vertical</span></div>
    <div class="jump" data-type="Oxer"><b>╫</b><span>Oxer</span></div>
    <div class="jump" data-type="Muro"><b>▰</b><span>Muro</span></div>
@@ -33,15 +41,22 @@
    <div class="jump" data-type="Triple"><b>≡</b><span>Triple</span></div>
    <div class="jump" data-type="Doble"><b>Ⅱ</b><span>Doble</span></div>
   </div>
-  <p class="tiny">Toca un tipo y luego toca la pista para colocarlo. Arrastra un obstáculo para moverlo.</p>
+   <p class="tiny">Elige un elemento y toca la pista. Para líneas y círculos, marca los puntos necesarios. Arrastra obstáculos para moverlos.</p>
   <h3>3 · Recorrido</h3>
-  <div class="card">
-   <div class="row"><button class="btn" id="routeMode">Definir orden</button><button class="btn" id="clearRoute">Borrar línea</button></div>
-   <p class="tiny">Activa “Definir orden” y toca los obstáculos en la secuencia deseada.</p>
+   <div class="card">
+   <div class="row"><button class="btn" id="routeMode">Definir orden</button><button class="btn" id="connectMode">Conectar</button><button class="btn" id="clearRoute">Borrar línea</button></div>
+   <div class="row" style="margin-top:8px"><button class="btn" id="addRoutePoint" disabled>Añadir punto intermedio</button></div>
+   <div class="row" style="margin-top:8px"><button class="btn" id="moveRouteUp" disabled>↑ Subir</button><button class="btn" id="moveRouteDown" disabled>↓ Bajar</button><button class="btn" id="autoOrder">Ordenar recorrido</button></div>
+   <div class="row" style="margin-top:8px"><button class="btn" id="validateCourse">Validar recorrido</button></div>
+   <p class="tiny" id="validation" aria-live="polite">Sin validar todavía.</p>
+   <div class="row" style="margin-top:8px;align-items:center"><label class="tiny" for="strideLength">Tranco de referencia (m)</label><input id="strideLength" type="number" min="2" max="5" step="0.1" value="3.5" style="width:76px"></div>
+   <p class="tiny" id="courseMetrics">Distancia: — · Trancos estimados: —</p>
+   <p class="tiny">Activa “Definir orden” y toca obstáculos, salida, llegada o geometrías para incorporarlos al recorrido.</p>
   </div>
   <h3>Proyecto</h3>
   <div class="card">
    <div class="row"><button class="btn" id="saveBtn">Guardar JSON</button><button class="btn" id="loadBtn">Abrir JSON</button></div>
+   <button class="btn primary" id="exportPng" style="width:100%;margin-top:8px">Exportar diseño PNG</button>
    <input id="fileInput" type="file" accept=".json,application/json" hidden>
    <button class="btn" id="demoBtn" style="width:100%;margin-top:8px">Cargar recorrido demo</button>
   </div>
@@ -54,7 +69,7 @@
    <div class="pill" id="camPill">Cámara: 3D</div>
    <div class="pill" id="countPill">0 obstáculos</div>
   </div>
-  <div class="help">Arrastrar: mover obstáculo · rueda/pellizco: zoom · fondo: orbitar en 3D · doble toque: seleccionar</div>
+  <div class="help">Arrastrar: mover · 🔵 girar · 🟨 ancho · 🔴 altura · rueda/pellizco: zoom · fondo: orbitar</div>
  </section>
 
  <aside class="panel right" id="rightPanel">
