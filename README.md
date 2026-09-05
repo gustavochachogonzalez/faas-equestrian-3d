@@ -20,6 +20,12 @@ The current working slice adds:
 - independent line actions in the right inspector: duplicate, delete, add point and remove point;
 - linked connection endpoints that remain attached while intermediate points are edited;
 - line duplication that creates an independent editable copy.
+- ordered execution of the course and independent line objects, with letter-based order confirmation;
+- editable line color, width and solid/dashed stroke styles;
+- generic joins between independent lines, curves, arrows and circles;
+- contextual prompt when placing an obstacle over a line or course path;
+- manual obstacle numbering preserved when automatic ordering is used;
+- additional green control points for the main course path.
 
 ## Auditoría de la v1.0
 
