@@ -92,7 +92,17 @@
    <div class="row" style="margin-top:8px"><button class="btn" id="addLinePoint">Añadir punto</button><button class="btn" id="deleteLinePoint">Eliminar punto</button></div>
    <div class="grid2" style="margin-top:8px"><div class="field"><label>Color</label><input id="lineColor" type="color" value="#8de1ff"></div><div class="field"><label>Ancho</label><input id="lineWidth" type="range" min="1" max="12" step="1" value="4"></div></div>
    <div class="field"><label>Trazo</label><select id="lineDash"><option value="solid">Continua</option><option value="dashed">Intermitente</option></select></div>
-   <button class="btn" id="connectGeometry" style="width:100%;margin-top:8px">Unir con otro elemento</button>
+  <button class="btn" id="connectGeometry" style="width:100%;margin-top:8px">Unir con otro elemento</button>
+  </div>
+  <h3>Ejecución</h3>
+  <div class="card">
+   <div class="field"><label for="executionSpeed">Velocidad de ejecución: <span id="executionSpeedValue">1×</span></label><input id="executionSpeed" type="range" min="0.25" max="3" step="0.25" value="1"></div>
+   <div class="grid2">
+    <div class="field"><label for="executionColor">Color del movimiento</label><input id="executionColor" type="color" value="#ef476f"></div>
+    <div class="field"><label for="executionWidth">Ancho</label><input id="executionWidth" type="range" min="2" max="16" step="1" value="8"></div>
+   </div>
+   <div class="field"><label for="executionDash">Trazo del movimiento</label><select id="executionDash"><option value="solid">Continua</option><option value="dashed">Intermitente</option><option value="dotted">Punteada</option></select></div>
+   <p class="tiny">Ejecutar respeta el orden de creación y reproduce el recorrido y todos los elementos gráficos.</p>
   </div>
   <h3>Orden del recorrido</h3>
   <div class="list" id="routeList"></div>
