@@ -56,9 +56,20 @@
   <h3>Proyecto</h3>
   <div class="card">
    <div class="row"><button class="btn" id="saveBtn">Guardar JSON</button><button class="btn" id="loadBtn">Abrir JSON</button></div>
-   <button class="btn primary" id="exportPng" style="width:100%;margin-top:8px">Exportar diseño PNG</button>
+   <button class="btn primary" id="exportPng" style="width:100%;margin-top:8px">Exportar diseño PNG</button><button class="btn primary" id="recordExecution" style="width:100%;margin-top:8px">Grabar ejecución como video</button>
    <input id="fileInput" type="file" accept=".json,application/json" hidden>
-   <button class="btn" id="demoBtn" style="width:100%;margin-top:8px">Cargar recorrido demo</button>
+  <button class="btn" id="demoBtn" style="width:100%;margin-top:8px">Cargar recorrido demo</button>
+  </div>
+  <h3>Biblioteca de referencias 3D</h3>
+  <div class="card">
+   <p class="tiny">Guarda imágenes, logos, obstáculos y ambientes para convertirlos posteriormente en activos 3D.</p>
+   <div class="field"><label for="assetCategory">Tipo de referencia</label><select id="assetCategory"><option>Obstáculo</option><option>Logo</option><option>Ambiente</option><option>Escenario</option><option>Textura</option><option>Otro</option></select></div>
+   <div class="field"><label for="assetDescription">Descripción</label><input id="assetDescription" type="text" placeholder="Ej.: vertical con logo Equitación Punta del Este"></div>
+   <div class="grid2"><div class="field"><label for="assetWidth">Ancho m</label><input id="assetWidth" type="number" min="0" step="0.01" placeholder="Opcional"></div><div class="field"><label for="assetHeight">Alto m</label><input id="assetHeight" type="number" min="0" step="0.01" placeholder="Opcional"></div></div>
+   <div class="grid2"><div class="field"><label for="assetDepth">Profundidad m</label><input id="assetDepth" type="number" min="0" step="0.01" placeholder="Opcional"></div><div class="field"><label for="assetMaterial">Material</label><input id="assetMaterial" type="text" placeholder="Madera, metal..."></div></div>
+   <input id="assetFileInput" type="file" accept="image/*" hidden>
+   <button class="btn primary" id="addAsset" style="width:100%">Añadir imagen o logo</button>
+   <p class="tiny">Toca una referencia para aplicarla al obstáculo seleccionado.</p><div id="assetList" class="list" style="margin-top:8px"></div>
   </div>
  </aside>
 
@@ -83,6 +94,7 @@
     <div class="field"><label>Altura m</label><input id="iHeight" type="number" step=".05"></div>
     <div class="field"><label>Ancho m</label><input id="iWidth" type="number" step=".1"></div>
    </div>
+   <div class="card"><strong>Construcción del obstáculo</strong><p class="tiny">Añade componentes que luego podrán convertirse en geometría 3D.</p><div class="grid2"><div class="field"><label>Color componente</label><input id="partColor" type="color" value="#f7f3e8"></div><div class="field"><label>Material</label><input id="partMaterial" type="text" placeholder="Madera, metal..."></div></div><div class="row"><button class="btn" id="addObstacleBar">Añadir vara</button><button class="btn" id="addObstaclePanel">Añadir panel</button></div><input id="obstacleLogoInput" type="file" accept="image/*" hidden><div class="field"><label>Destino de la referencia</label><select id="assetApplyTarget"><option value="side">Lateral del obstáculo</option><option value="panel">Panel o relleno</option><option value="whole">Obstáculo completo</option></select></div><button class="btn" id="addObstacleLogo" style="width:100%;margin-top:8px">Añadir logo lateral</button><div class="field"><label>Escala del logo</label><input id="logoScale" type="range" min="0.2" max="2" step="0.05" value="1"></div><div class="grid2"><div class="field"><label>Desplazamiento X</label><input id="logoOffsetX" type="range" min="-1" max="1" step="0.05" value="0"></div><div class="field"><label>Desplazamiento Y</label><input id="logoOffsetY" type="range" min="-1" max="1" step="0.05" value="0"></div></div><div class="field"><label>Rotación del logo °</label><input id="logoRotation" type="range" min="-180" max="180" value="0"></div></div>
    <div class="row"><button class="btn" id="duplicate">Duplicar</button><button class="btn danger" id="delete">Eliminar</button></div>
   </div>
   <div class="card" id="lineInspector" style="display:none">
@@ -90,6 +102,7 @@
    <p class="tiny">Los puntos verdes permiten modificar el trazado. Arrastra la línea completa para desplazarla.</p>
    <div class="row"><button class="btn" id="duplicateLine">Duplicar línea</button><button class="btn danger" id="deleteLine">Eliminar línea</button></div>
    <div class="row" style="margin-top:8px"><button class="btn" id="addLinePoint">Añadir punto</button><button class="btn" id="deleteLinePoint">Eliminar punto</button></div>
+   <button class="btn" id="smoothLine" style="width:100%;margin-top:8px">Mejorar línea / curva</button>
    <div class="grid2" style="margin-top:8px"><div class="field"><label>Color</label><input id="lineColor" type="color" value="#8de1ff"></div><div class="field"><label>Ancho</label><input id="lineWidth" type="range" min="1" max="12" step="1" value="4"></div></div>
    <div class="field"><label>Trazo</label><select id="lineDash"><option value="solid">Continua</option><option value="dashed">Intermitente</option></select></div>
   <button class="btn" id="connectGeometry" style="width:100%;margin-top:8px">Unir con otro elemento</button>
