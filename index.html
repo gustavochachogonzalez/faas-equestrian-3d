@@ -52,6 +52,7 @@
    <p class="tiny" id="validation" aria-live="polite">Sin validar todavía.</p>
    <div class="row" style="margin-top:8px;align-items:center"><label class="tiny" for="strideLength">Tranco de referencia (m)</label><input id="strideLength" type="number" min="2" max="5" step="0.1" value="3.5" style="width:76px"></div>
    <p class="tiny" id="courseMetrics">Distancia: — · Trancos estimados: —</p>
+   <div class="list" id="courseBreakdown" aria-label="Mediciones por tramo" style="margin-top:8px"></div>
    <p class="tiny">Activa “Definir orden” y toca obstáculos, salida, llegada o geometrías para incorporarlos al recorrido.</p>
   </div>
   <h3>Proyecto</h3>
@@ -129,6 +130,8 @@
    <div class="field"><label>Zoom</label><input id="zoom" type="range" min="5" max="18" value="10"></div>
    <label class="row"><input id="shadows" type="checkbox" checked style="width:auto;flex:0"> <span>Sombras</span></label>
    <label class="row"><input id="grid" type="checkbox" checked style="width:auto;flex:0"> <span>Cuadrícula</span></label>
+   <div class="row" style="margin-top:8px"><button class="btn" id="cameraTop">Cenital</button><button class="btn" id="cameraDrone">Drone</button></div>
+   <div class="row" style="margin-top:8px"><button class="btn" id="cameraRider">Jinete</button><button class="btn" id="cameraCinema">Cinemática</button></div>
   </div>
  </aside>
 </main>
