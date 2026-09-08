@@ -217,4 +217,9 @@ const phase3UpdateUIFinal=updateUI;updateUI=function(){phase3UpdateUIFinal();upd
 function setCameraPreset(name){let presets={cenital:{view:'top',yaw:-32,pitch:75,zoom:10},drone:{view:'3d',yaw:-38,pitch:58,zoom:11},jinete:{view:'3d',yaw:-12,pitch:28,zoom:14},cinematica:{view:'3d',yaw:-58,pitch:42,zoom:12}}[name];if(!presets)return;view=presets.view;yaw=presets.yaw*Math.PI/180;pitch=presets.pitch*Math.PI/180;zoom=presets.zoom;$('#yaw').value=presets.yaw;$('#pitch').value=presets.pitch;$('#zoom').value=zoom;$('#camPill').textContent='Cámara: '+(name==='cenital'?'cenital':name);draw();status('Cámara '+name+' activada')}
 $('#cameraTop').onclick=()=>setCameraPreset('cenital');$('#cameraDrone').onclick=()=>setCameraPreset('drone');$('#cameraRider').onclick=()=>setCameraPreset('jinete');$('#cameraCinema').onclick=()=>setCameraPreset('cinematica');
 
+// Presentación visual final: ambiente de día, atardecer o noche sin alterar la geometría del diseño.
+let environmentMode='day';
+const phase3PresentationDraw=draw;draw=function(){phase3PresentationDraw();let r=canvas.getBoundingClientRect();if(environmentMode==='day')return;ctx.save();if(environmentMode==='sunset'){let g=ctx.createLinearGradient(0,0,0,r.height);g.addColorStop(0,'#e86f3faa');g.addColorStop(.5,'#e8a74e33');g.addColorStop(1,'#3b2b3477');ctx.fillStyle=g;ctx.fillRect(0,0,r.width,r.height)}else{ctx.fillStyle='#07132a88';ctx.fillRect(0,0,r.width,r.height);ctx.fillStyle='#dbeeff';for(let i=0;i<36;i++){let x=(i*83)%r.width,y=(i*47)%Math.max(120,r.height*.42);ctx.fillRect(x,y,1.5,1.5)}}ctx.restore()};
+$('#environmentMode').onchange=e=>{environmentMode=e.target.value;draw();status('Ambiente '+(environmentMode==='day'?'de día':environmentMode==='sunset'?'atardecer':'noche')+' activado')};
+
 })();
