@@ -9,16 +9,18 @@
 <body>
 <div class="app">
 <header>
- <button class="btn mobileToggle" id="leftToggle">☰</button>
+ <button class="btn panelToggle" id="leftToggle" title="Mostrar u ocultar barra izquierda">☰</button>
  <div class="brand">FAAS EQUESTRIAN 3D ACADEMY <small>Course Designer · WEB v1.0 · by Equitación Punta del Este</small></div>
  <div class="spacer"></div>
  <button class="btn desktopOnly" id="viewTop">Vista cenital</button>
  <button class="btn desktopOnly" id="view3d">Vista 3D</button>
  <button class="btn" id="fullscreenBtn" title="Ocultar barras y trabajar a pantalla completa">⛶ Pantalla completa</button>
+ <button class="btn panelToggle" id="leftCollapse" title="Mostrar u ocultar barra izquierda">◀</button>
+ <button class="btn panelToggle" id="rightCollapse" title="Mostrar u ocultar barra derecha">▶</button>
  <button class="btn" id="undo" title="Deshacer (hasta 4 movimientos)" aria-label="Deshacer">↶</button>
  <button class="btn" id="redo" title="Rehacer (hasta 4 movimientos)" aria-label="Rehacer">↷</button>
  <button class="btn primary" id="play">▶ Ejecutar</button>
- <button class="btn mobileToggle" id="rightToggle">⚙</button>
+ <button class="btn panelToggle" id="rightToggle" title="Mostrar u ocultar barra derecha">⚙</button>
 </header>
 <main>
  <aside class="panel" id="leftPanel">
@@ -57,7 +59,7 @@
   </div>
   <h3>Proyecto</h3>
   <div class="card">
-   <div class="row"><button class="btn" id="saveBtn">Guardar JSON</button><button class="btn" id="loadBtn">Abrir JSON</button></div>
+   <div class="row"><button class="btn primary" id="newProject">Nuevo proyecto</button><button class="btn" id="saveBtn">Guardar JSON</button><button class="btn" id="loadBtn">Abrir JSON</button></div>
    <button class="btn primary" id="exportPng" style="width:100%;margin-top:8px">Exportar diseño PNG</button><button class="btn primary" id="recordExecution" style="width:100%;margin-top:8px">Grabar ejecución como video</button>
    <input id="fileInput" type="file" accept=".json,application/json" hidden>
   <button class="btn" id="demoBtn" style="width:100%;margin-top:8px">Cargar recorrido demo</button>
