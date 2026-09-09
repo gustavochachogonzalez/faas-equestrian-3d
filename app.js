@@ -291,6 +291,8 @@ canvas.addEventListener('pointerdown',e=>{let q=pointerPos(e),h=selectedCurveHan
 canvas.addEventListener('pointermove',e=>{if(!routeDrag||routeDrag.index==='move')return;let n=routeDrag.node;if(!['curve','connection','line'].includes(n.kind))return;e.preventDefault();e.stopImmediatePropagation();let q=pointerPos(e),p=unproject(q.x,q.y);if(n.kind==='line'){if(routeDrag.index===0)n.a=p;else n.b=p}else if(n.points?.[routeDrag.index]){n.points[routeDrag.index]=p}draw()},true);
 canvas.addEventListener('pointerup',e=>{if(!routeDrag||routeDrag.index==='move')return;let n=routeDrag.node;if(['curve','connection','line'].includes(n.kind)){past.push(routeDrag.before);if(past.length>MAX_HISTORY)past.shift();future=[];buttons();setMode('seleccionar');updateUI();draw()}routeDrag=null},true);
 const priorRefreshCurveInspector=refreshLineInspector;refreshLineInspector=function(){priorRefreshCurveInspector();let n=lineNode(),p=$('#lineInspector')?.querySelector('.tiny');if(p&&n)p.textContent=n.kind==='curve'?'Extremos verdes: extensión y dirección · puntos centrales: forma y fluidez. Arrastra cada punto para editar.':'Los puntos verdes permiten modificar el trazado. Arrastra la línea completa para desplazarla.'};
+// La toma del punto se hace sobre cualquier línea visible, igual que en el recorrido principal.
+selectedCurveHandle=function(sx,sy){let h=hitRouteHandle(sx,sy);if(!h||!['curve','connection','line'].includes(h.node?.kind))return null;return h};
 // El checkbox existente es el control directo para quitar o recuperar la cuadrícula.
 $('#grid').onchange=e=>{showGrid=e.target.checked;draw();status(showGrid?'Cuadrícula activada':'Cuadrícula oculta')};
 // Optimización de rendimiento: agrupa redibujados y aligera el lienzo durante el arrastre.
