@@ -511,4 +511,49 @@ async function previewPremiumVertical3D(){if(!selected)return;let o=selected;clo
 const previewObstacleBeforePremium=previewObstacle3D;previewObstacle3D=function(){return selected?.designPreset==='faas-vertical-premium'?previewPremiumVertical3D():previewObstacleBeforePremium()};
 function ensurePremiumControls(){let panel=$('#rightPanel');if(!panel||$('#premiumControls'))return;let box=document.createElement('div');box.id='premiumControls';box.className='card phase6-card';box.innerHTML='<strong>Vertical Premium FAAS · Fase 31</strong><p class="tiny">Modelo patrón con geometría 3D, varas separadas, copas, pies, banderas y materiales.</p><button class="btn primary" id="createPremiumVertical" style="width:100%">Crear Vertical Premium FAAS</button><button class="btn" id="previewPremiumVertical" style="width:100%;margin-top:8px">Vista previa 3D Premium</button><p class="tiny">Debe aprobarse este modelo antes de extender la calidad al Oxer, Triple, Muro y Liverpool.</p>';panel.insertBefore(box,panel.firstChild);$('#createPremiumVertical').onclick=createPremiumVertical;$('#previewPremiumVertical').onclick=()=>{if(selected?.designPreset==='faas-vertical-premium')previewPremiumVertical3D();else status('Selecciona el Vertical Premium FAAS')};}
 const premiumUI=updateUI;updateUI=function(){premiumUI();ensurePremiumControls()};ensurePremiumControls();
+
+/* FAAS CLEAN INTERFACE · preserve legacy modules without visual clutter */
+function applyCleanInterface(){
+  const hiddenIds=[
+    'phase4Controls','phase5Controls','phase6Controls','phase7Controls',
+    'phase8Controls','phase9Controls','phase10Controls','phase11Controls',
+    'phase12Controls','phase13Controls','phase14Controls','phase15Controls',
+    'phase16Controls','phase17Controls','phase18Controls','phase19Controls',
+    'phase20to23Controls'
+  ];
+  hiddenIds.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});
+  const construction=[...document.querySelectorAll('#inspector .card')]
+    .find(el=>el.querySelector('strong')?.textContent.includes('Construcción del obstáculo'));
+  if(construction)construction.style.display='none';
+  document.querySelectorAll('.jump[data-type]').forEach(btn=>{
+    const type=btn.dataset.type;
+    if(type==='Oxer'){
+      const label=btn.querySelector('span');
+      if(label)label.textContent='Paralela';
+      btn.title='Paralela';
+      btn.style.display='';
+    }else if(type!=='Vertical'){
+      btn.style.display='none';
+    }
+  });
+  const panel=document.getElementById('rightPanel');
+  if(panel&&!document.getElementById('cleanModeCard')){
+    const card=document.createElement('div');
+    card.id='cleanModeCard';
+    card.className='card';
+    card.innerHTML='<strong>FAAS · modo limpio</strong><p class="tiny">Recorrido, trazado, obstáculos, ejecución y guardado.</p>';
+    panel.insertBefore(card,panel.firstChild);
+  }
+  const premium=document.getElementById('premiumControls');
+  if(premium){
+    const title=premium.querySelector('strong');
+    if(title)title.textContent='Obstáculos premium';
+    const note=premium.querySelector('p.tiny:last-child');
+    if(note)note.textContent='Vertical Premium disponible. Paralela: modelo de referencia pendiente de incorporar.';
+  }
+}
+const cleanBaseUI=updateUI;
+updateUI=function(){cleanBaseUI();applyCleanInterface()};
+applyCleanInterface();
+
 })();
