@@ -556,4 +556,29 @@ const cleanBaseUI=updateUI;
 updateUI=function(){cleanBaseUI();applyCleanInterface()};
 applyCleanInterface();
 
+
+/* FAAS CORE UI RESTORE · mobile and tablet controls */
+function restoreCoreInterface(){
+  const left=document.getElementById('leftPanel');
+  const right=document.getElementById('rightPanel');
+  document.body.classList.remove('panel-hidden-left','panel-hidden-right');
+  if(left)left.classList.add('show');
+  if(right&&window.innerWidth>900)right.classList.add('show');
+}
+function setCorePanel(side,visible){
+  const id=side==='left'?'leftPanel':'rightPanel';
+  const el=document.getElementById(id);
+  if(window.innerWidth<=900){
+    if(el)el.classList.toggle('show',visible);
+  }else{
+    document.body.classList.toggle(side==='left'?'panel-hidden-left':'panel-hidden-right',!visible);
+  }
+  resize();
+}
+document.getElementById('leftToggle')?.addEventListener('click',()=>setCorePanel('left',!document.getElementById('leftPanel')?.classList.contains('show')));
+document.getElementById('rightToggle')?.addEventListener('click',()=>setCorePanel('right',!document.getElementById('rightPanel')?.classList.contains('show')));
+document.getElementById('leftCollapse')?.addEventListener('click',()=>setCorePanel('left',false));
+document.getElementById('rightCollapse')?.addEventListener('click',()=>setCorePanel('right',false));
+restoreCoreInterface();
+
 })();
