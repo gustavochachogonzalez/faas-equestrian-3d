@@ -54,3 +54,20 @@ The current working slice adds:
 6. validación ecuestre: numeración, distancias, combinaciones, sentido de salto y ficha técnica.
 
 The app must be served as a real web app (for example through GitHub Pages); opening the HTML from Files/Quick Look is not a valid runtime test for JavaScript.
+
+## Caballo cenital — 15 septiembre 2026
+
+1. Abre tu JSON anterior, crea un recorrido o pulsa **Cargar recorrido demo**.
+2. En la barra derecha, abre **Caballo · plano cenital**. Ya incluye el caballo cenital aportado como referencia.
+3. Elige la duración (40 segundos por defecto), tamaño y orientación. **Girar imagen 180°** corrige una imagen que mira hacia atrás.
+4. Pulsa **Ejecutar**. **Pausar / Continuar** conserva la posición. **Reiniciar recorrido** devuelve el editor al inicio.
+5. **Guardar JSON** incluye la imagen y sus ajustes. **Guardar caballo** conserva una copia en este navegador; **Recuperar guardado** la recupera.
+6. **Grabar ejecución como video** usa la capacidad de grabación del navegador; el formato depende del dispositivo. No se garantiza MP4 en todos los navegadores.
+
+El caballo y el trazo usan una única distancia acumulada y un único reloj. El tamaño se expresa en metros de la pista. La línea termina detrás del centro del caballo; la separación adicional se mide sobre la curva. Se conservan las curvas del editor y el orden de los elementos. Los elementos separados se reproducen por tramos: usa **Conectar** si necesitas continuidad entre ellos.
+
+La imagen se desplaza y gira en el plano cenital; no anima patas. Cargar JPG no elimina su fondo: usar preferentemente PNG transparente. Brillo, contraste y saturación se procesan en la imagen, sin depender de filtros Canvas de Safari. Las imágenes cargadas se reducen a un máximo de 1024 px para limitar memoria.
+
+Validación de esta entrega: sintaxis JavaScript; pruebas de distancia uniforme, puntos repetidos, cruces, pertenencia a la curva y duración a 30/60/120 fps; arranque, reloj y serialización con DOM simulado; prueba en Chromium real de ejecución completa, pausa/continuación, guardado/recuperación, exportación/importación JSON, proyecto vacío y ausencia de desbordamiento a 390 px. Inspección visual a 1194 × 834 y 390 × 844. La prueba física en Safari/iPad queda pendiente.
+
+Para ejecutar las pruebas matemáticas: `node tests/cenital.test.cjs`.

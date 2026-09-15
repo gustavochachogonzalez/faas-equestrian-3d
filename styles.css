@@ -38,3 +38,17 @@ footer{display:flex;gap:8px;align-items:center;padding:8px 12px;background:#0b17
 
 /* Keep core camera controls available on iPad and mobile */
 @media(max-width:900px){header .desktopOnly{display:inline-block}}
+
+/* Controles cenitales táctiles y cabecera adaptable. */
+#horseCenital label,#horseCenital summary{font-size:14px}
+#horseCenital .btn,#horseCenital input{min-height:44px}
+#horseCenital .grid2>*{min-width:0}
+header{flex-wrap:wrap}header .btn{white-space:nowrap}
+main{position:relative}
+@media(max-width:900px){
+ header{gap:5px;padding:6px}.brand{font-size:12px;flex:1;min-width:180px}.brand small{font-size:10px}
+ header #leftCollapse,header #rightCollapse{display:none}
+ header #fullscreenBtn{font-size:12px}
+ .panel{top:0;bottom:0}footer{max-height:48px;overflow:hidden}footer>span:not(.status){display:none}
+ .help{max-width:90%}
+}
