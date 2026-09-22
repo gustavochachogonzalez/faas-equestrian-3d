@@ -1074,4 +1074,74 @@ const beforeEnhancedToolUpdate=updateUI;
 updateUI=function(){beforeEnhancedToolUpdate();ensureCircleTargetLabel()};
 ensureCircleTargetLabel();
 
+
+/* FAAS TOOLS REFINEMENT · rotation and inversion scope */
+function rotatePointAround(p,cx,cy,deg){
+  const a=deg*Math.PI/180,dx=p.x-cx,dy=p.y-cy,co=Math.cos(a),si=Math.sin(a);
+  return{x:cx+dx*co-dy*si,y:cy+dx*si+dy*co};
+}
+function routeNodeCenter(n){
+  if(n.kind==='circle')return{x:n.cx,y:n.cy};
+  const pts=n.kind==='line'?[n.a,n.b]:n.points||[];
+  if(!pts.length)return{x:W/2,y:H/2};
+  return{x:pts.reduce((s,p)=>s+p.x,0)/pts.length,y:pts.reduce((s,p)=>s+p.y,0)/pts.length};
+}
+function rotateRouteNode(n,deg,aroundProject=false){
+  if(!n)return;
+  const center=aroundProject?{x:W/2,y:H/2}:routeNodeCenter(n);
+  if(n.kind==='line'){n.a=rotatePointAround(n.a,center.x,center.y,deg);n.b=rotatePointAround(n.b,center.x,center.y,deg)}
+  else if(['curve','connection'].includes(n.kind))n.points?.forEach((p,i)=>n.points[i]=rotatePointAround(p,center.x,center.y,deg));
+  else if(n.kind==='circle'){const p=rotatePointAround({x:n.cx,y:n.cy},center.x,center.y,deg);n.cx=p.x;n.cy=p.y;n.rotation=(n.rotation||0)+deg}
+  else if(n.kind==='point'||n.kind==='courseControl'||n.kind==='sceneObject'){const p=rotatePointAround(n,center.x,center.y,deg);n.x=p.x;n.y=p.y}
+}
+invertRouteNode=function(n){
+  if(!n)return;
+  if(n.kind==='line'){const a=n.a;n.a=n.b;n.b=a}
+  else if(['curve','connection'].includes(n.kind)&&Array.isArray(n.points))n.points.reverse();
+  else if(n.kind==='circle'){n.direction=n.direction==='reverse'?'forward':'reverse';n.rotation=(n.rotation||0)+180}
+  else if(n.kind==='point')n.marker=n.marker==='start'?'finish':n.marker==='finish'?'start':n.marker;
+};
+function rotateSelectedBy(deg){
+  if(!deg)return;
+  history();
+  if(selectedScene)selectedScene.rotation=(selectedScene.rotation||0)+deg;
+  else if(selected)selected.rot=(selected.rot||0)+deg;
+  else if(routeSelection)rotateRouteNode(routeSelection,deg,false);
+  else{status('Selecciona un elemento o usa Rotar proyecto');return}
+  updateUI();draw();status('Elemento seleccionado rotado '+deg+'°');
+}
+function rotateWholeProjectBy(deg){
+  if(!deg)return;
+  history();
+  objects.forEach(o=>{const p=rotatePointAround(o,W/2,H/2,deg);o.x=p.x;o.y=p.y;o.rot=(o.rot||0)+deg});
+  sceneObjects.forEach(o=>{const p=rotatePointAround(o,W/2,H/2,deg);o.x=p.x;o.y=p.y;o.rotation=(o.rotation||0)+deg});
+  route.forEach(n=>rotateRouteNode(n,deg,true));
+  updateUI();draw();status('Proyecto completo rotado '+deg+'°');
+}
+function ensureRotationControls(){
+  const box=$('#invertControls');if(!box)return;
+  const old=$('#duplicateInvert');if(old)old.remove();
+  if(!$('#rotationControls')){
+    const controls=document.createElement('div');
+    controls.id='rotationControls';
+    controls.innerHTML='<hr style="border-color:#29415e;border-width:1px 0 0;margin:10px 0"><strong>Rotación</strong><p class="tiny">Selecciona un elemento o rota el proyecto completo.</p><input id="rotationAngle" type="range" min="-180" max="180" step="1" value="0"><div class="row"><button class="btn" id="rotateSelected">Rotar seleccionado</button><button class="btn primary" id="rotateProject">Rotar proyecto</button></div><p class="tiny" id="rotationValue">0°</p>';
+    box.appendChild(controls);
+    $('#rotationAngle').oninput=e=>{$('#rotationValue').textContent=e.target.value+'°'};
+    $('#rotateSelected').onclick=()=>{rotateSelectedBy(+$ ('#rotationAngle').value||0);$('#rotationAngle').value=0;$('#rotationValue').textContent='0°'};
+    $('#rotateProject').onclick=()=>{rotateWholeProjectBy(+$ ('#rotationAngle').value||0);$('#rotationAngle').value=0;$('#rotationValue').textContent='0°'};
+  }
+}
+const baseCircleGeometryForInvert=drawRouteGeometry;
+drawRouteGeometry=function(){
+  baseCircleGeometryForInvert();
+  route.filter(n=>n.kind==='circle').forEach(n=>{
+    const pts=nodePoints(n),i=n.direction==='reverse'?4:0;
+    const a=pts[i],b=pts[(i+1)%pts.length];if(!a||!b)return;
+    arrow(a,b,n===routeSelection?'#ffd166':'#57bdf8');
+  });
+};
+const baseToolsUpdateForRotation=updateUI;
+updateUI=function(){baseToolsUpdateForRotation();ensureRotationControls()};
+ensureRotationControls();
+
 })();
