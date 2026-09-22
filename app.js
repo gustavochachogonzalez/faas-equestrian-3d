@@ -994,4 +994,84 @@ const finalEnhancedUI=updateUI;
 updateUI=function(){finalEnhancedUI();enhanceSpeedControl();ensureEnhancedTools();ensureCircleLinePointHandler();};
 ensureEnhancedTools();enhanceSpeedControl();restoreAssetLibrary();updateUI();
 
+
+/* FAAS CORRECTION PASS · multi-circle editing and practical image controls */
+function nearestCircleHandle(sx,sy){
+  let best=null,dist=Infinity;
+  route.forEach(n=>{
+    if(n.kind!=='circle')return;
+    const center=project(n.cx,n.cy,.2),radius=project(n.cx+n.r,n.cy,.2);
+    const dc=Math.hypot(sx-center.x,sy-center.y),dr=Math.hypot(sx-radius.x,sy-radius.y);
+    if(dc<20&&dc<dist){best={node:n,kind:'move'};dist=dc}
+    if(dr<24&&dr<dist){best={node:n,kind:'radius'};dist=dr}
+  });
+  return best;
+}
+let circleDragPass=null;
+canvas.addEventListener('pointerdown',e=>{
+  if(placeType||routeMode||connectMode)return;
+  const q=pointerPos(e),hitCircle=nearestCircleHandle(q.x,q.y);
+  if(!hitCircle)return;
+  e.preventDefault();e.stopImmediatePropagation();routeSelection=hitCircle.node;
+  circleDragPass={node:hitCircle.node,kind:hitCircle.kind,before:snapshot()};
+  status(hitCircle.kind==='radius'?'Arrastra para modificar el diámetro del círculo':'Arrastra para mover el círculo');
+  draw();
+},true);
+canvas.addEventListener('pointermove',e=>{
+  if(!circleDragPass)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  const q=pointerPos(e),p=unproject(q.x,q.y),n=circleDragPass.node;
+  if(circleDragPass.kind==='radius')n.r=Math.max(1,Math.min(40,Math.hypot(p.x-n.cx,p.y-n.cy)));
+  else{n.cx=Math.max(0,Math.min(W,p.x));n.cy=Math.max(0,Math.min(H,p.y))}
+  draw();
+},true);
+canvas.addEventListener('pointerup',e=>{
+  if(!circleDragPass)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  past.push(circleDragPass.before);if(past.length>MAX_HISTORY)past.shift();future=[];buttons();circleDragPass=null;updateUI();draw();
+},true);
+const baseHitSceneObjectEnhanced=hitSceneObject;
+hitSceneObject=function(sx,sy){
+  for(let i=sceneObjects.length-1;i>=0;i--){
+    const o=sceneObjects[i],d=o.dimensions||{},p=project(o.x,o.y,.2);
+    const unit=Math.max(.1,project(0,0,.04).s||1),w=Math.max(24,(d.width||6)*(o.scale||1)*unit),h=Math.max(24,(d.depth||3)*(o.scale||1)*unit);
+    const angle=-(o.rotation||0)*Math.PI/180,dx=sx-p.x,dy=sy-p.y,rx=dx*Math.cos(angle)-dy*Math.sin(angle),ry=dx*Math.sin(angle)+dy*Math.cos(angle);
+    if(Math.abs(rx)<=w/2+18&&Math.abs(ry)<=h/2+18)return o;
+  }
+  return baseHitSceneObjectEnhanced(sx,sy);
+};
+const baseRenderSceneControlsFinal=renderSceneControls;
+renderSceneControls=function(){
+  baseRenderSceneControlsFinal();
+  if(!selectedScene)return;
+  const box=$('#sceneControls');if(!box)return;
+  if(!$('#sceneFineControls')){
+    const fine=document.createElement('div');fine.id='sceneFineControls';
+    fine.innerHTML='<div class="row" style="margin-top:8px"><button class="btn" id="sceneScaleDown">− Escala</button><button class="btn" id="sceneScaleUp">+ Escala</button></div><div class="row" style="margin-top:8px"><button class="btn" id="sceneOpacityDown">− Opacidad</button><button class="btn" id="sceneOpacityUp">+ Opacidad</button></div><p class="tiny">Cada imagen se edita por separado. Área de trabajo queda al fondo; Imagen en pista queda entre ella y el recorrido.</p>';
+    box.appendChild(fine);
+  }
+  const changeScale=delta=>{history();selectedScene.scale=Math.max(.05,Math.min(8,(selectedScene.scale||1)+delta));updateUI();draw()};
+  const changeOpacity=delta=>{selectedScene.opacity=Math.max(.05,Math.min(1,(selectedScene.opacity==null?.9:selectedScene.opacity)+delta));draw()};
+  $('#sceneScaleDown').onclick=()=>changeScale(-.1);$('#sceneScaleUp').onclick=()=>changeScale(.1);
+  $('#sceneOpacityDown').onclick=()=>changeOpacity(-.05);$('#sceneOpacityUp').onclick=()=>changeOpacity(.05);
+};
+const baseDeliverExportFinal=deliverExport;
+deliverExport=async function(blob,name,mime){
+  if(mime&&mime.startsWith('video/')&&navigator.share&&navigator.canShare){
+    const file=new File([blob],name,{type:mime});
+    if(navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file],title:'FAAS Equestrian · ejecución',text:'Guardar video en Fotos'});return true}
+      catch(e){if(e?.name==='AbortError'){status('Compartir cancelado; el video sigue disponible para descargar');return false}}
+    }
+  }
+  return baseDeliverExportFinal(blob,name,mime);
+};
+function ensureCircleTargetLabel(){
+  const b=$('#addLinePointMode');
+  if(b)b.title='Toca una línea, flecha, curva o círculo; luego usa sus puntos verdes';
+}
+const beforeEnhancedToolUpdate=updateUI;
+updateUI=function(){beforeEnhancedToolUpdate();ensureCircleTargetLabel()};
+ensureCircleTargetLabel();
+
 })();
