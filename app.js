@@ -1144,4 +1144,86 @@ const baseToolsUpdateForRotation=updateUI;
 updateUI=function(){baseToolsUpdateForRotation();ensureRotationControls()};
 ensureRotationControls();
 
+
+/* FAAS CIRCLE ORIENTATION FIX · independent start point and direction */
+const baseNodePointsCircleFix=nodePoints;
+nodePoints=function(n){
+  if(n?.kind==='circle'){
+    const start=Number.isFinite(n.startAngle)?n.startAngle:0;
+    const direction=n.direction==='reverse'?-1:1;
+    const points=[];
+    for(let i=0;i<=24;i++){
+      const t=start+direction*(i/24)*Math.PI*2;
+      points.push({x:n.cx+Math.cos(t)*n.r,y:n.cy+Math.sin(t)*n.r});
+    }
+    return points;
+  }
+  return baseNodePointsCircleFix(n);
+};
+const baseRouteEditPointsCircleFix=routeEditPoints;
+routeEditPoints=function(n){
+  if(n?.kind==='circle'){
+    const a=Number.isFinite(n.startAngle)?n.startAngle:0;
+    return[{x:n.cx,y:n.cy},{x:n.cx+Math.cos(a)*n.r,y:n.cy+Math.sin(a)*n.r}];
+  }
+  return baseRouteEditPointsCircleFix(n);
+};
+rotateRouteNode=function(n,deg,aroundProject=false){
+  if(!n)return;
+  if(n.kind==='circle'){
+    const c=aroundProject?{x:W/2,y:H/2}:{x:n.cx,y:n.cy};
+    if(aroundProject){const p=rotatePointAround({x:n.cx,y:n.cy},c.x,c.y,deg);n.cx=p.x;n.cy=p.y}
+    n.startAngle=(Number.isFinite(n.startAngle)?n.startAngle:0)+deg*Math.PI/180;
+    n.rotation=(n.rotation||0)+deg;
+    return;
+  }
+  const center=aroundProject?{x:W/2,y:H/2}:routeNodeCenter(n);
+  if(n.kind==='line'){n.a=rotatePointAround(n.a,center.x,center.y,deg);n.b=rotatePointAround(n.b,center.x,center.y,deg)}
+  else if(['curve','connection'].includes(n.kind))n.points?.forEach((p,i)=>n.points[i]=rotatePointAround(p,center.x,center.y,deg));
+  else if(n.kind==='point'||n.kind==='courseControl'||n.kind==='sceneObject'){const p=rotatePointAround(n,center.x,center.y,deg);n.x=p.x;n.y=p.y}
+};
+invertRouteNode=function(n){
+  if(!n)return;
+  if(n.kind==='line'){const a=n.a;n.a=n.b;n.b=a}
+  else if(['curve','connection'].includes(n.kind)&&Array.isArray(n.points))n.points.reverse();
+  else if(n.kind==='circle'){
+    n.direction=n.direction==='reverse'?'forward':'reverse';
+    n.startAngle=(Number.isFinite(n.startAngle)?n.startAngle:0)+Math.PI;
+    n.rotation=(n.rotation||0)+180;
+  }
+  else if(n.kind==='point')n.marker=n.marker==='start'?'finish':n.marker==='finish'?'start':n.marker;
+};
+const baseCircleHandlesFix=drawRouteHandles;
+drawRouteHandles=function(){
+  baseCircleHandlesFix();
+  const n=routeSelection;
+  if(!n||n.kind!=='circle')return;
+  const a=Number.isFinite(n.startAngle)?n.startAngle:0;
+  const p=project(n.cx+Math.cos(a)*n.r,n.cy+Math.sin(a)*n.r,.3);
+  ctx.save();ctx.fillStyle='#39e58c';ctx.strokeStyle='#07111f';ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(p.x,p.y,11,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#07111f';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('I',p.x,p.y);ctx.restore();
+};
+let circleStartDragFix=null;
+canvas.addEventListener('pointerdown',e=>{
+  if(placeType||routeMode||connectMode)return;
+  const n=routeSelection;
+  if(!n||n.kind!=='circle')return;
+  const a=Number.isFinite(n.startAngle)?n.startAngle:0;
+  const p=project(n.cx+Math.cos(a)*n.r,n.cy+Math.sin(a)*n.r,.3),q=pointerPos(e);
+  if(Math.hypot(q.x-p.x,q.y-p.y)>24)return;
+  e.preventDefault();e.stopImmediatePropagation();circleStartDragFix={node:n,before:snapshot()};status('Arrastra el punto verde I para cambiar el inicio del círculo');
+},true);
+canvas.addEventListener('pointermove',e=>{
+  if(!circleStartDragFix)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  const q=pointerPos(e),p=unproject(q.x,q.y),n=circleStartDragFix.node;
+  n.startAngle=Math.atan2(p.y-n.cy,p.x-n.cx);draw();
+},true);
+canvas.addEventListener('pointerup',e=>{
+  if(!circleStartDragFix)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  past.push(circleStartDragFix.before);if(past.length>MAX_HISTORY)past.shift();future=[];buttons();circleStartDragFix=null;updateUI();draw();
+},true);
+
 })();
