@@ -1149,7 +1149,7 @@ ensureRotationControls();
 const baseNodePointsCircleFix=nodePoints;
 nodePoints=function(n){
   if(n?.kind==='circle'){
-    const start=Number.isFinite(n.startAngle)?n.startAngle:0;
+    const start=Number.isFinite(n.startAngle)?n.startAngle:-Math.PI/2;
     const direction=n.direction==='reverse'?-1:1;
     const points=[];
     for(let i=0;i<=24;i++){
@@ -1163,7 +1163,7 @@ nodePoints=function(n){
 const baseRouteEditPointsCircleFix=routeEditPoints;
 routeEditPoints=function(n){
   if(n?.kind==='circle'){
-    const a=Number.isFinite(n.startAngle)?n.startAngle:0;
+    const a=Number.isFinite(n.startAngle)?n.startAngle:-Math.PI/2;
     return[{x:n.cx,y:n.cy},{x:n.cx+Math.cos(a)*n.r,y:n.cy+Math.sin(a)*n.r}];
   }
   return baseRouteEditPointsCircleFix(n);
@@ -1173,7 +1173,7 @@ rotateRouteNode=function(n,deg,aroundProject=false){
   if(n.kind==='circle'){
     const c=aroundProject?{x:W/2,y:H/2}:{x:n.cx,y:n.cy};
     if(aroundProject){const p=rotatePointAround({x:n.cx,y:n.cy},c.x,c.y,deg);n.cx=p.x;n.cy=p.y}
-    n.startAngle=(Number.isFinite(n.startAngle)?n.startAngle:0)+deg*Math.PI/180;
+    n.startAngle=(Number.isFinite(n.startAngle)?n.startAngle:-Math.PI/2)+deg*Math.PI/180;
     n.rotation=(n.rotation||0)+deg;
     return;
   }
@@ -1188,7 +1188,7 @@ invertRouteNode=function(n){
   else if(['curve','connection'].includes(n.kind)&&Array.isArray(n.points))n.points.reverse();
   else if(n.kind==='circle'){
     n.direction=n.direction==='reverse'?'forward':'reverse';
-    n.startAngle=(Number.isFinite(n.startAngle)?n.startAngle:0)+Math.PI;
+    n.startAngle=(Number.isFinite(n.startAngle)?n.startAngle:-Math.PI/2)+Math.PI;
     n.rotation=(n.rotation||0)+180;
   }
   else if(n.kind==='point')n.marker=n.marker==='start'?'finish':n.marker==='finish'?'start':n.marker;
@@ -1198,7 +1198,7 @@ drawRouteHandles=function(){
   baseCircleHandlesFix();
   const n=routeSelection;
   if(!n||n.kind!=='circle')return;
-  const a=Number.isFinite(n.startAngle)?n.startAngle:0;
+  const a=Number.isFinite(n.startAngle)?n.startAngle:-Math.PI/2;
   const p=project(n.cx+Math.cos(a)*n.r,n.cy+Math.sin(a)*n.r,.3);
   ctx.save();ctx.fillStyle='#39e58c';ctx.strokeStyle='#07111f';ctx.lineWidth=3;
   ctx.beginPath();ctx.arc(p.x,p.y,11,0,Math.PI*2);ctx.fill();ctx.stroke();
@@ -1209,7 +1209,7 @@ canvas.addEventListener('pointerdown',e=>{
   if(placeType||routeMode||connectMode)return;
   const n=routeSelection;
   if(!n||n.kind!=='circle')return;
-  const a=Number.isFinite(n.startAngle)?n.startAngle:0;
+  const a=Number.isFinite(n.startAngle)?n.startAngle:-Math.PI/2;
   const p=project(n.cx+Math.cos(a)*n.r,n.cy+Math.sin(a)*n.r,.3),q=pointerPos(e);
   if(Math.hypot(q.x-p.x,q.y-p.y)>24)return;
   e.preventDefault();e.stopImmediatePropagation();circleStartDragFix={node:n,before:snapshot()};status('Arrastra el punto verde I para cambiar el inicio del círculo');
