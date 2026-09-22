@@ -26,7 +26,7 @@ function drawRouteGeometry(){route.forEach(n=>{if(n.kind==='line'||n.kind==='cur
 function drawRouteHandles(){if(!routeSelection)return;let pts=nodePoints(routeSelection);ctx.save();ctx.setLineDash([5,5]);ctx.strokeStyle='#ffd16688';ctx.lineWidth=2;if(routeSelection.kind==='circle'){let c=project(routeSelection.cx,routeSelection.cy,.2),r=project(routeSelection.cx+routeSelection.r,routeSelection.cy,.2);ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(r.x,r.y);ctx.stroke()}else if(pts.length>1){ctx.beginPath();pts.forEach((p,i)=>{let q=project(p.x,p.y,.2);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)});ctx.stroke()}ctx.setLineDash([]);pts.forEach(p=>{let q=project(p.x,p.y,.22);ctx.fillStyle='#ffd166';ctx.strokeStyle='#07111f';ctx.lineWidth=2;ctx.beginPath();ctx.arc(q.x,q.y,7,0,Math.PI*2);ctx.fill();ctx.stroke()});ctx.restore()}
 function drawMarkers(){route.forEach(n=>{if(n.kind!=='point')return;let p=project(n.x,n.y,.15);ctx.fillStyle=n.marker==='start'?'#57e389':'#ff6b6b';ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,9,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#07111f';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n.marker==='start'?'S':'L',p.x,p.y)})}
 function drawRoute(){let raw=allRoutePoints(),pts=catmull(raw).map(p=>project(p.x,p.y,.16));if(pts.length>1){ctx.strokeStyle='#e8f5ff99';ctx.lineWidth=3;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();let n=Math.max(2,Math.floor(pts.length*(anim?progress:1)));ctx.strokeStyle='#ef476f';ctx.shadowColor='#ef476f';ctx.shadowBlur=12;ctx.lineWidth=8;ctx.beginPath();pts.slice(0,n).forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.shadowBlur=0;if(n>2){let k=Math.min(raw.length-1,Math.max(1,Math.floor(n/14)));arrow(raw[k-1],raw[k],'#ffd166')}}}
-function draw(){let r=canvas.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);let g=ctx.createLinearGradient(0,0,0,r.height);g.addColorStop(0,'#8fc5df');g.addColorStop(.45,'#d7e7e8');g.addColorStop(.46,'#365d3e');g.addColorStop(1,'#17311f');ctx.fillStyle=g;ctx.fillRect(0,0,r.width,r.height);groundPoly();drawRouteGeometry();drawRoute();drawMarkers();drawRouteHandles();[...objects].sort((a,b)=>(project(a.x,a.y).depth||0)-(project(b.x,b.y).depth||0)).forEach(drawJump);drawObstacleHandles();drawConnectors();if(draft){let p=project(draft.points?draft.points.at(-1).x:draft.start.x,draft.points?draft.points.at(-1).y:draft.start.y,.2);ctx.strokeStyle='#ffd166';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,8,0,Math.PI*2);ctx.stroke()}}
+function draw(){let r=canvas.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);let g=ctx.createLinearGradient(0,0,0,r.height);g.addColorStop(0,'#8fc5df');g.addColorStop(.45,'#d7e7e8');g.addColorStop(.46,'#365d3e');g.addColorStop(1,'#17311f');ctx.fillStyle=g;ctx.fillRect(0,0,r.width,r.height);groundPoly();drawSceneObjects('workarea');drawSceneObjects('track');drawRouteGeometry();drawRoute();drawMarkers();drawRouteHandles();[...objects].sort((a,b)=>(project(a.x,a.y).depth||0)-(project(b.x,b.y).depth||0)).forEach(drawJump);drawObstacleHandles();drawConnectors();if(draft){let p=project(draft.points?draft.points.at(-1).x:draft.start.x,draft.points?draft.points.at(-1).y:draft.start.y,.2);ctx.strokeStyle='#ffd166';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,8,0,Math.PI*2);ctx.stroke()}}
 function unproject(sx,sy){let r=canvas.getBoundingClientRect();if(view==='top'){let s=Math.min(r.width/(W+12),r.height/(H+12))*zoom/10;return{x:(sx-r.width/2)/s+W/2,y:(sy-r.height/2)/s+H/2}}let o=project(0,0),px=project(1,0),py=project(0,1),ax=px.x-o.x,ay=px.y-o.y,bx=py.x-o.x,by=py.y-o.y,dx=sx-o.x,dy=sy-o.y,det=ax*by-ay*bx;return{x:(dx*by-dy*bx)/det,y:(ax*dy-ay*dx)/det}}
 function hit(sx,sy){let best=null,bd=28;objects.forEach(o=>{let p=project(o.x,o.y),d=Math.hypot(p.x-sx,p.y-sy);if(d<bd){best=o;bd=d}});return best}function hitObstacleHandle(sx,sy){if(!selected)return null;let o=selected,rad=o.rot*Math.PI/180,p=project(o.x,o.y,.25),sz=project(o.x+Math.cos(rad)*o.width/2,o.y+Math.sin(rad)*o.width/2,.25),rot=project(o.x,o.y-4,.25);if(Math.hypot(rot.x-sx,rot.y-sy)<18)return'rotate';if(Math.hypot(sz.x-sx,sz.y-sy)<18)return'size';return null}function hitRouteHandle(sx,sy){for(let i=route.length-1;i>=0;i--){let n=route[i];if(n.kind==='circle'){let q=project(n.cx+n.r,n.cy,.2);if(Math.hypot(q.x-sx,q.y-sy)<16)return{node:n,index:'radius'}}let pts=nodePoints(n);for(let j=0;j<pts.length;j++){let q=project(pts[j].x,pts[j].y,.2);if(Math.hypot(q.x-sx,q.y-sy)<16)return{node:n,index:j}}}return null}function segmentDistance(p,a,b){let dx=b.x-a.x,dy=b.y-a.y,t=((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1);t=Math.max(0,Math.min(1,t));return Math.hypot(p.x-(a.x+t*dx),p.y-(a.y+t*dy))}function hitRouteGeometry(sx,sy){for(let i=route.length-1;i>=0;i--){let n=route[i],pts=n.kind==='curve'||n.kind==='connection'?catmull(nodePoints(n),18):nodePoints(n);if(n.kind==='circle'){let q=project(n.cx,n.cy,.1),r=project(n.cx+n.r,n.cy,.1).x-q.x;if(Math.abs(Math.hypot(sx-q.x,sy-q.y)-Math.abs(r))<14)return n;continue}for(let j=1;j<pts.length;j++){let a=project(pts[j-1].x,pts[j-1].y,.1),b=project(pts[j].x,pts[j].y,.1);if(segmentDistance({x:sx,y:sy},a,b)<12)return n}}return null}function pointerPos(e){let r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
 function snapshot(){return JSON.stringify({W,H,objects,assets,sceneRefs,sceneObjects,route})}function restore(s){let d=JSON.parse(s);W=d.W;H=d.H;objects=d.objects||[];assets=d.assets||[];sceneRefs=d.sceneRefs||[];sceneObjects=d.sceneObjects||[];route=d.route||[];routeSelection=null;routeDrag=null;$('#arenaW').value=W;$('#arenaH').value=H;selected=selected&&objects.find(o=>o.id===selected.id)||null;updateUI();draw()}
@@ -157,7 +157,7 @@ const updateUIWithPalette=updateUI;updateUI=function(){updateUIWithPalette();ens
 function renderSceneRefs(){let left=$('#leftPanel');if(!left)return;let box=$('#sceneReferenceCard');if(!box){box=document.createElement('div');box.id='sceneReferenceCard';box.className='card';box.innerHTML='<strong>Referencias de escenario</strong><p class="tiny">Ambientes y escenarios reservados para la futura escena 3D.</p><div id="sceneReferenceList" class="list"></div>';left.appendChild(box)}let list=$('#sceneReferenceList');if(!list)return;list.innerHTML='';sceneRefs.forEach((r,i)=>{let d=document.createElement('div');d.className='item';d.innerHTML=`<span>${r.name}</span><button class="btn" data-place-index="${i}">Colocar</button><button class="btn danger" data-scene-index="${i}">×</button>`;d.querySelector('[data-place-index]').onclick=()=>placeSceneReference(r);d.querySelector('[data-scene-index]').onclick=()=>{history();sceneRefs.splice(i,1);updateUI();status('Referencia de escenario eliminada')};list.appendChild(d)})}
 function placeSceneReference(ref){let cat=(ref.category||'').toLowerCase(),dimensions=ref.dimensions|| (cat.includes('ambiente')?{width:3,depth:3,height:8}:cat.includes('escenario')?{width:14,depth:5,height:4}:{width:6,depth:3,height:1.2});history();sceneObjects.push({id:uid(),assetId:ref.assetId,name:ref.name,category:ref.category,description:ref.description,material:ref.material,color:ref.color,src:ref.src,x:W/2,y:H/2,scale:1,rotation:0,dimensions});updateUI();draw();status('Referencia colocada en la pista')}
 function drawSceneObjects(){sceneObjects.forEach(o=>{if(!logoImages[o.id]&&typeof Image!=='undefined'){let image=new Image();image.onload=draw;image.src=o.src;logoImages[o.id]=image}let image=logoImages[o.id];if(!image||!image.complete)return;let p=project(o.x,o.y,.02),size=70*(o.scale||1);ctx.save();ctx.globalAlpha=.55;ctx.translate(p.x,p.y);ctx.rotate((o.rotation||0)*Math.PI/180);ctx.drawImage(image,-size/2,-size/2,size,size);ctx.restore()})}
-const baseSceneDraw=draw;draw=function(){baseSceneDraw();drawSceneObjects()};
+const baseSceneDraw=draw;draw=function(){baseSceneDraw()};
 const updateUIWithScenes=updateUI;updateUI=function(){updateUIWithScenes();renderSceneRefs()};
 async function deliverExport(blob,name,mime){if(!blob)return false;let file=new File([blob],name,{type:mime});if(typeof navigator!=='undefined'&&navigator.share&&navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:name});return true}catch(e){if(e?.name!=='AbortError')status('Compartir no disponible; se intentará descargar')}}let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);return true}
 $('#saveBtn').onclick=()=>{let data={version:'0.7',arena:{width:W,length:H},objects,assets,sceneRefs,sceneObjects,route};let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='faas_equestrian_course.json';a.click();URL.revokeObjectURL(a.href);status('Proyecto guardado')};
@@ -775,4 +775,223 @@ for(const [id,side] of [['leftToggle','left'],['rightToggle','right'],['leftColl
 }
 let zenWasMobile=innerWidth<=900;addEventListener('resize',()=>{const mobile=innerWidth<=900;if(mobile&&!zenWasMobile)$('#rightPanel').classList.remove('show');zenWasMobile=mobile});
 horseControlsSync();loadHorseImage();zenBuild();draw();
+
+/* FAAS ENHANCED WORKFLOW · execution, circles, image layers, library and inversion */
+function persistAssetLibrary(){
+  try{localStorage.setItem('faas_reference_assets_v1',JSON.stringify(assets||[]))}catch(e){}
+}
+function restoreAssetLibrary(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('faas_reference_assets_v1')||'[]');
+    if(Array.isArray(saved)){
+      const ids=new Set((assets||[]).map(a=>a.id));
+      saved.forEach(a=>{if(a&&!ids.has(a.id))assets.push(a)});
+    }
+  }catch(e){}
+}
+restoreAssetLibrary();
+const baseRenderAssetsEnhanced=renderAssets;
+renderAssets=function(){baseRenderAssetsEnhanced();persistAssetLibrary()};
+function sceneRole(o){return o?.role==='workarea'?'workarea':'track'}
+function drawSceneImageLayer(layer){
+  sceneObjects.filter(o=>o&&o.src&&sceneRole(o)===layer).forEach(o=>{
+    if(!logoImages[o.id]&&typeof Image!=='undefined'){
+      const image=new Image();
+      image.onload=draw;
+      image.src=o.src;
+      logoImages[o.id]=image;
+    }
+    const image=logoImages[o.id];
+    if(!image||!image.complete)return;
+    const d=o.dimensions||{};
+    const width=Math.max(1,(d.width||W*.8)*(o.scale||1));
+    const depth=Math.max(1,(d.depth||H*.8)*(o.scale||1));
+    const center=project(o.x,o.y,layer==='workarea'?.04:.22);
+    const unit=Math.max(.1,project(0,0,.04).s||1);
+    const px=width*unit,py=depth*unit;
+    ctx.save();
+    ctx.globalAlpha=Math.max(.05,Math.min(1,o.opacity==null?(layer==='workarea'?.72:.9):o.opacity));
+    ctx.translate(center.x,center.y);
+    ctx.rotate((o.rotation||0)*Math.PI/180);
+    ctx.scale(o.flipX?-1:1,1);
+    ctx.drawImage(image,-px/2,-py/2,px,py);
+    ctx.restore();
+  });
+}
+const legacySceneObjectsEnhanced=drawSceneObjects;
+drawSceneObjects=function(layer){
+  if(layer==='workarea'||layer==='track'){drawSceneImageLayer(layer);return}
+  const keep=sceneObjects;
+  sceneObjects=keep.filter(o=>!o.src);
+  try{legacySceneObjectsEnhanced()}finally{sceneObjects=keep}
+};
+const basePlaceWorkAreaEnhanced=placeImageWorkArea;
+placeImageWorkArea=function(item){
+  basePlaceWorkAreaEnhanced(item);
+  const o=sceneObjects.at(-1);
+  if(o){
+    o.role='workarea';o.layer=0;o.opacity=.72;o.flipX=false;
+    const hasExplicit=item.dimensions&&[item.dimensions.width,item.dimensions.height].some(v=>Number(v)>0);
+    if(!hasExplicit)o.dimensions={width:W*.86,depth:H*.86,height:.05};
+  }
+  updateUI();draw();
+};
+const basePlaceSceneReferenceEnhanced=placeSceneReference;
+placeSceneReference=function(ref){
+  basePlaceSceneReferenceEnhanced(ref);
+  const o=sceneObjects.at(-1);
+  if(o){o.role='track';o.layer=1;o.opacity=.9;o.flipX=false}
+  updateUI();draw();
+};
+
+const baseRenderSceneControlsEnhanced=renderSceneControls;
+renderSceneControls=function(){
+  baseRenderSceneControlsEnhanced();
+  if(!selectedScene)return;
+  const box=$('#sceneControls');
+  if(!box)return;
+  const role=sceneRole(selectedScene);
+  const extra=document.createElement('div');
+  extra.innerHTML='<hr style="border-color:#29415e;border-width:1px 0 0;margin:10px 0"><div class="field"><label>Escala independiente</label><input id="sceneScaleWide" type="range" min=".05" max="8" step=".05" value="'+(selectedScene.scale||1)+'"></div><div class="field"><label>Opacidad</label><input id="sceneOpacity" type="range" min=".05" max="1" step=".05" value="'+(selectedScene.opacity==null?.9:selectedScene.opacity)+'"></div><div class="field"><label>Capa de imagen</label><select id="sceneRole"><option value="workarea">Área de trabajo · fondo</option><option value="track">Imagen en pista · sobre el área</option></select></div><div class="row"><button class="btn" id="flipScene">Invertir elemento</button><button class="btn danger" id="deleteSceneEnhanced">Eliminar</button></div>';
+  box.appendChild(extra);
+  $('#sceneRole').value=role;
+  $('#sceneScaleWide').oninput=e=>{selectedScene.scale=+e.target.value;draw();};
+  $('#sceneOpacity').oninput=e=>{selectedScene.opacity=+e.target.value;draw();};
+  $('#sceneRole').onchange=e=>{selectedScene.role=e.target.value;selectedScene.layer=e.target.value==='workarea'?0:1;draw();status(e.target.value==='workarea'?'Imagen enviada al fondo':'Imagen colocada sobre el área de trabajo')};
+  $('#flipScene').onclick=()=>{history();selectedScene.flipX=!selectedScene.flipX;draw();status('Imagen invertida')};
+  $('#deleteSceneEnhanced').onclick=()=>{history();sceneObjects=sceneObjects.filter(o=>o!==selectedScene);selectedScene=null;updateUI();draw();status('Imagen eliminada')};
+};
+
+function invertRouteNode(n){
+  if(!n)return;
+  if(n.kind==='line'){const a=n.a;n.a=n.b;n.b=a}
+  else if(['curve','connection'].includes(n.kind)&&Array.isArray(n.points))n.points.reverse();
+  else if(n.kind==='point')n.marker=n.marker==='start'?'finish':n.marker==='finish'?'start':n.marker;
+}
+function invertSelectedElement(){
+  if(selectedScene){history();selectedScene.flipX=!selectedScene.flipX;selectedScene.rotation=((selectedScene.rotation||0)+180)%360;updateUI();draw();status('Elemento invertido');return}
+  if(selected){history();selected.rot=(selected.rot||0)+180;updateUI();draw();status('Obstáculo invertido');return}
+  if(routeSelection){history();invertRouteNode(routeSelection);updateUI();draw();status('Elemento del recorrido invertido');return}
+  status('Selecciona una imagen, obstáculo o elemento del recorrido');
+}
+function invertWholeProject(){
+  history();
+  objects.forEach(o=>{o.x=W-o.x;o.rot=(o.rot||0)+180});
+  sceneObjects.forEach(o=>{o.x=W-o.x;o.flipX=!o.flipX});
+  route.forEach(n=>{
+    if(n.kind==='line'){n.a.x=W-n.a.x;n.b.x=W-n.b.x}
+    else if(['curve','connection'].includes(n.kind))n.points?.forEach(p=>p.x=W-p.x);
+    else if(n.kind==='circle')n.cx=W-n.cx;
+    else if(n.kind==='point')n.x=W-n.x;
+    else if(n.kind==='courseControl')n.x=W-n.x;
+    else if(n.kind==='sceneObject')n.x=W-n.x;
+  });
+  route.reverse();
+  route.forEach(invertRouteNode);
+  updateUI();draw();status('Proyecto completo invertido');
+}
+function ensureEnhancedTools(){
+  const right=$('#rightPanel'),left=$('#leftPanel');
+  if(right&&!$('#invertControls')){
+    const box=document.createElement('div');
+    box.id='invertControls';box.className='card';
+    box.innerHTML='<strong>Herramientas del proyecto</strong><p class="tiny">Actúa sobre el elemento seleccionado o sobre todo el proyecto.</p><div class="row"><button class="btn" id="invertSelected">Invertir seleccionado</button><button class="btn" id="duplicateInvert">Duplicar e invertir</button></div><button class="btn primary" id="invertProject" style="width:100%;margin-top:8px">Invertir proyecto completo</button>';
+    right.appendChild(box);
+    $('#invertSelected').onclick=invertSelectedElement;
+    $('#duplicateInvert').onclick=()=>{if(selected){$('#duplicate').click();invertSelectedElement()}else if(selectedScene){const copy=JSON.parse(JSON.stringify(selectedScene));copy.id=uid();copy.x=Math.min(W,copy.x+3);sceneObjects.push(copy);selectedScene=copy;invertSelectedElement()}else status('Selecciona un elemento para duplicar e invertir')};
+    $('#invertProject').onclick=invertWholeProject;
+  }
+  if(left&&!$('#projectLibraryControls')){
+    const projectCard=document.createElement('div');
+    projectCard.id='projectLibraryControls';projectCard.className='card';
+    projectCard.innerHTML='<strong>Biblioteca de proyectos</strong><p class="tiny">Guarda proyectos completos para reutilizarlos.</p><button class="btn primary" id="saveProjectLibrary" style="width:100%">Guardar proyecto en biblioteca</button><select id="projectLibrarySelect" style="margin-top:8px"><option value="">Seleccionar proyecto</option></select><div class="row" style="margin-top:8px"><button class="btn" id="loadProjectLibrary">Cargar</button><button class="btn danger" id="deleteProjectLibrary">Eliminar</button></div>';
+    const projectHeading=[...left.querySelectorAll('h3')].find(h=>h.textContent.trim()==='Proyecto');
+    if(projectHeading?.nextElementSibling)projectHeading.parentNode.insertBefore(projectCard,projectHeading.nextElementSibling.nextElementSibling);
+    else left.appendChild(projectCard);
+    $('#saveProjectLibrary').onclick=saveProjectToLibrary;
+    $('#loadProjectLibrary').onclick=loadProjectFromLibrary;
+    $('#deleteProjectLibrary').onclick=deleteProjectFromLibrary;
+    renderProjectLibrary();
+  }
+}
+function projectPayload(){
+  return {version:'1.0',arena:{width:W,length:H},objects,assets,sceneRefs,sceneObjects,route,execution:{speed:executionSpeed,color:executionColor,width:executionWidth,dash:executionDash},camera:{view,yaw:yaw*180/Math.PI,pitch:pitch*180/Math.PI,zoom}};
+}
+function projectLibraryData(){
+  try{return JSON.parse(localStorage.getItem('faas_project_library_v1')||'[]')}catch(e){return[]}
+}
+function renderProjectLibrary(){
+  const select=$('#projectLibrarySelect');if(!select)return;
+  const list=projectLibraryData();select.innerHTML='<option value="">Seleccionar proyecto</option>';
+  list.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;select.appendChild(o)});
+}
+function saveProjectToLibrary(){
+  const name=prompt('Nombre del proyecto');if(!name?.trim())return;
+  const list=projectLibraryData();
+  list.push({id:uid(),name:name.trim(),savedAt:new Date().toISOString(),data:projectPayload()});
+  try{localStorage.setItem('faas_project_library_v1',JSON.stringify(list));renderProjectLibrary();status('Proyecto guardado en la biblioteca')}catch(e){status('No se pudo guardar: reduce imágenes o exporta JSON')}
+}
+function applyProjectPayload(data){
+  W=data.arena?.width||80;H=data.arena?.length||60;objects=data.objects||[];assets=data.assets||[];sceneRefs=data.sceneRefs||[];sceneObjects=data.sceneObjects||[];route=data.route||[];
+  executionSpeed=data.execution?.speed||1;executionColor=data.execution?.color||'#ef476f';executionWidth=data.execution?.width||8;executionDash=data.execution?.dash||'solid';
+  view=data.camera?.view||'top';yaw=(data.camera?.yaw??-32)*Math.PI/180;pitch=(data.camera?.pitch??48)*Math.PI/180;zoom=data.camera?.zoom||10;
+  $('#arenaW').value=W;$('#arenaH').value=H;$('#executionSpeed').value=executionSpeed;$('#executionSpeedValue').textContent=executionSpeed+'×';$('#executionColor').value=executionColor;$('#executionWidth').value=executionWidth;$('#executionDash').value=executionDash;
+  selected=null;selectedScene=null;routeSelection=null;updateUI();draw();status('Proyecto cargado desde la biblioteca');
+}
+function loadProjectFromLibrary(){
+  const id=$('#projectLibrarySelect')?.value;if(!id)return;
+  const item=projectLibraryData().find(p=>p.id===id);if(item)applyProjectPayload(item.data);
+}
+function deleteProjectFromLibrary(){
+  const id=$('#projectLibrarySelect')?.value;if(!id)return;
+  const list=projectLibraryData().filter(p=>p.id!==id);
+  try{localStorage.setItem('faas_project_library_v1',JSON.stringify(list));renderProjectLibrary();status('Proyecto eliminado de la biblioteca')}catch(e){}
+}
+function addCircleLinePointCompatibility(){
+  if(!placingLinePoint)return;
+}
+let circleDragEnhanced=null;
+canvas.addEventListener('pointerdown',e=>{
+  if(!placingLinePoint)return;
+  const q=pointerPos(e),n=originalHitGeometryForLinePoint(q.x,q.y);
+  if(n?.kind==='circle'){
+    e.preventDefault();e.stopImmediatePropagation();routeSelection=n;
+    circleDragEnhanced={node:n,kind:'move',before:snapshot(),start:unproject(q.x,q.y)};
+    status('Círculo seleccionado: usa los puntos verdes para moverlo o cambiar su diámetro');
+    draw();
+  }
+},true);
+canvas.addEventListener('pointerdown',e=>{
+  if(placeType||routeMode||connectMode||placingLinePoint)return;
+  const q=pointerPos(e),n=route.find(x=>x.kind==='circle');
+  if(!n)return;
+  const c=project(n.cx,n.cy,.2),r=project(n.cx+n.r,n.cy,.2);
+  if(Math.hypot(q.x-r.x,q.y-r.y)<22){e.preventDefault();e.stopImmediatePropagation();routeSelection=n;circleDragEnhanced={node:n,kind:'radius',before:snapshot()};status('Arrastra el punto verde para modificar el diámetro');draw()}
+},true);
+canvas.addEventListener('pointermove',e=>{
+  if(!circleDragEnhanced)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  const q=pointerPos(e),p=unproject(q.x,q.y),n=circleDragEnhanced.node;
+  if(circleDragEnhanced.kind==='radius')n.r=Math.max(1,Math.min(40,Math.hypot(p.x-n.cx,p.y-n.cy)));
+  else {n.cx=Math.max(0,Math.min(W,p.x));n.cy=Math.max(0,Math.min(H,p.y))}
+  draw();
+},true);
+canvas.addEventListener('pointerup',e=>{
+  if(!circleDragEnhanced)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  past.push(circleDragEnhanced.before);if(past.length>MAX_HISTORY)past.shift();future=[];buttons();circleDragEnhanced=null;updateUI();draw();
+},true);
+const originalCircleLinePointHandler=addIndependentPoint;
+function ensureCircleLinePointHandler(){
+  const b=$('#addLinePointMode');if(!b)return;
+  b.title='También selecciona círculos para modificar su centro y diámetro';
+}
+function enhanceSpeedControl(){
+  const speed=$('#executionSpeed'),value=$('#executionSpeedValue');
+  if(speed){speed.min='.25';speed.max='4';speed.step='.25';value.textContent=executionSpeed+'×';speed.value=executionSpeed}
+}
+const finalEnhancedUI=updateUI;
+updateUI=function(){finalEnhancedUI();enhanceSpeedControl();ensureEnhancedTools();ensureCircleLinePointHandler();};
+ensureEnhancedTools();enhanceSpeedControl();restoreAssetLibrary();updateUI();
+
 })();
