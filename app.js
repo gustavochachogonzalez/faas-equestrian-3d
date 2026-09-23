@@ -907,49 +907,104 @@ function ensureEnhancedTools(){
   if(left&&!$('#projectLibraryControls')){
     const projectCard=document.createElement('div');
     projectCard.id='projectLibraryControls';projectCard.className='card';
-    projectCard.innerHTML='<strong>Biblioteca de proyectos</strong><p class="tiny">Guarda proyectos completos para reutilizarlos.</p><button class="btn primary" id="saveProjectLibrary" style="width:100%">Guardar proyecto en biblioteca</button><select id="projectLibrarySelect" style="margin-top:8px"><option value="">Seleccionar proyecto</option></select><div class="row" style="margin-top:8px"><button class="btn" id="loadProjectLibrary">Cargar</button><button class="btn danger" id="deleteProjectLibrary">Eliminar</button></div>';
+    projectCard.innerHTML='<strong>Biblioteca de proyectos</strong><p class="tiny">Guarda proyectos completos para reutilizarlos.</p><button class="btn primary" id="saveProjectLibrary" style="width:100%">Guardar proyecto en biblioteca</button><select id="projectLibrarySelect" style="margin-top:8px"><option value="">Seleccionar proyecto</option></select><div class="row" style="margin-top:8px"><button class="btn" id="loadProjectLibrary">Cargar</button><button class="btn danger" id="deleteProjectLibrary">Eliminar</button></div><div class="row" style="margin-top:8px"><button class="btn" id="exportProjectLibrary">Exportar maestro</button><button class="btn" id="importProjectLibrary">Importar maestro</button></div><input id="projectLibraryImportFile" type="file" accept=".json,.faas.json,application/json" style="display:none"><p class="tiny">La biblioteca local usa almacenamiento persistente del navegador. El maestro exportado puede guardarse en Drive y volver a importarse.</p>';
     const projectHeading=[...left.querySelectorAll('h3')].find(h=>h.textContent.trim()==='Proyecto');
     if(projectHeading?.nextElementSibling)projectHeading.parentNode.insertBefore(projectCard,projectHeading.nextElementSibling.nextElementSibling);
     else left.appendChild(projectCard);
     $('#saveProjectLibrary').onclick=saveProjectToLibrary;
     $('#loadProjectLibrary').onclick=loadProjectFromLibrary;
     $('#deleteProjectLibrary').onclick=deleteProjectFromLibrary;
+    $('#exportProjectLibrary').onclick=exportProjectFromLibrary;
+    $('#importProjectLibrary').onclick=()=>$('#projectLibraryImportFile').click();
+    $('#projectLibraryImportFile').onchange=importProjectFromLibrary;
     renderProjectLibrary();
   }
 }
 function projectPayload(){
   return {version:'1.0',arena:{width:W,length:H},objects,assets,sceneRefs,sceneObjects,route,execution:{speed:executionSpeed,color:executionColor,width:executionWidth,dash:executionDash},camera:{view,yaw:yaw*180/Math.PI,pitch:pitch*180/Math.PI,zoom}};
 }
-function projectLibraryData(){
-  try{return JSON.parse(localStorage.getItem('faas_project_library_v1')||'[]')}catch(e){return[]}
+const PROJECT_DB_NAME='faas-project-library-v2';
+const PROJECT_DB_VERSION=1;
+const PROJECT_STORE='projects';
+let projectDbPromise=null;
+function openProjectDatabase(){
+  if(!('indexedDB' in window))return Promise.reject(new Error('IndexedDB no disponible'));
+  if(projectDbPromise)return projectDbPromise;
+  projectDbPromise=new Promise((resolve,reject)=>{
+    const req=indexedDB.open(PROJECT_DB_NAME,PROJECT_DB_VERSION);
+    req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(PROJECT_STORE))db.createObjectStore(PROJECT_STORE,{keyPath:'id'})};
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('No se pudo abrir la biblioteca'));
+  });
+  return projectDbPromise;
 }
-function renderProjectLibrary(){
+function projectDbRequest(mode,action){
+  return openProjectDatabase().then(db=>new Promise((resolve,reject)=>{
+    const tx=db.transaction(PROJECT_STORE,mode),store=tx.objectStore(PROJECT_STORE),req=action(store);
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||new Error('Error de biblioteca'));
+  }));
+}
+async function migrateLegacyProjectLibrary(){
+  try{
+    const current=await projectDbRequest('readonly',store=>store.getAll());
+    if(current?.length)return;
+    const legacy=JSON.parse(localStorage.getItem('faas_project_library_v1')||'[]');
+    if(!Array.isArray(legacy)||!legacy.length)return;
+    const db=await openProjectDatabase();
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(PROJECT_STORE,'readwrite'),store=tx.objectStore(PROJECT_STORE);
+      legacy.forEach(p=>store.put(p));tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+    });
+  }catch(e){}
+}
+async function projectLibraryData(){try{return await projectDbRequest('readonly',store=>store.getAll())}catch(e){return[]}}
+async function renderProjectLibrary(){
   const select=$('#projectLibrarySelect');if(!select)return;
-  const list=projectLibraryData();select.innerHTML='<option value="">Seleccionar proyecto</option>';
-  list.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;select.appendChild(o)});
+  const list=await projectLibraryData();
+  select.innerHTML='<option value="">Seleccionar proyecto</option>';
+  list.sort((a,b)=>String(b.savedAt||'').localeCompare(String(a.savedAt||''))).forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name+' · '+new Date(p.savedAt||Date.now()).toLocaleDateString();select.appendChild(o)});
 }
-function saveProjectToLibrary(){
+async function saveProjectToLibrary(){
   const name=prompt('Nombre del proyecto');if(!name?.trim())return;
-  const list=projectLibraryData();
-  list.push({id:uid(),name:name.trim(),savedAt:new Date().toISOString(),data:projectPayload()});
-  try{localStorage.setItem('faas_project_library_v1',JSON.stringify(list));renderProjectLibrary();status('Proyecto guardado en la biblioteca')}catch(e){status('No se pudo guardar: reduce imágenes o exporta JSON')}
+  const item={id:uid(),name:name.trim(),savedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(projectPayload()))};
+  try{
+    await projectDbRequest('readwrite',store=>store.put(item));
+    await renderProjectLibrary();status('Proyecto guardado correctamente en la biblioteca');
+  }catch(e){status('No se pudo guardar. Exporta el maestro y guárdalo en Drive.')}
 }
-function applyProjectPayload(data){
+async function applyProjectPayload(data){
   W=data.arena?.width||80;H=data.arena?.length||60;objects=data.objects||[];assets=data.assets||[];sceneRefs=data.sceneRefs||[];sceneObjects=data.sceneObjects||[];route=data.route||[];
   executionSpeed=data.execution?.speed||1;executionColor=data.execution?.color||'#ef476f';executionWidth=data.execution?.width||8;executionDash=data.execution?.dash||'solid';
   view=data.camera?.view||'top';yaw=(data.camera?.yaw??-32)*Math.PI/180;pitch=(data.camera?.pitch??48)*Math.PI/180;zoom=data.camera?.zoom||10;
   $('#arenaW').value=W;$('#arenaH').value=H;$('#executionSpeed').value=executionSpeed;$('#executionSpeedValue').textContent=executionSpeed+'×';$('#executionColor').value=executionColor;$('#executionWidth').value=executionWidth;$('#executionDash').value=executionDash;
   selected=null;selectedScene=null;routeSelection=null;updateUI();draw();status('Proyecto cargado desde la biblioteca');
 }
-function loadProjectFromLibrary(){
+async function loadProjectFromLibrary(){
   const id=$('#projectLibrarySelect')?.value;if(!id)return;
-  const item=projectLibraryData().find(p=>p.id===id);if(item)applyProjectPayload(item.data);
+  const item=(await projectLibraryData()).find(p=>p.id===id);if(item)await applyProjectPayload(item.data);
 }
-function deleteProjectFromLibrary(){
+async function deleteProjectFromLibrary(){
   const id=$('#projectLibrarySelect')?.value;if(!id)return;
-  const list=projectLibraryData().filter(p=>p.id!==id);
-  try{localStorage.setItem('faas_project_library_v1',JSON.stringify(list));renderProjectLibrary();status('Proyecto eliminado de la biblioteca')}catch(e){}
+  try{await projectDbRequest('readwrite',store=>store.delete(id));await renderProjectLibrary();status('Proyecto eliminado de la biblioteca')}catch(e){status('No se pudo eliminar el proyecto')}
 }
+async function exportProjectFromLibrary(){
+  const id=$('#projectLibrarySelect')?.value;if(!id){status('Selecciona un proyecto para exportarlo');return}
+  const item=(await projectLibraryData()).find(p=>p.id===id);if(!item)return;
+  const blob=new Blob([JSON.stringify(item,null,2)],{type:'application/json'});
+  const name=(item.name||'proyecto-faas').replace(/[^a-z0-9áéíóúüñ _-]/gi,'_')+'.faas.json';
+  await deliverExport(blob,name,'application/json');status('Maestro exportado: puedes guardarlo en Drive');
+}
+async function importProjectFromLibrary(e){
+  const file=e.target.files?.[0];if(!file)return;
+  try{
+    const imported=JSON.parse(await file.text()),item=imported.data?.arena?imported:{id:uid(),name:imported.name||file.name.replace(/\\.faas\\.json$|\\.json$/i,''),savedAt:new Date().toISOString(),data:imported};
+    if(!item.data?.arena)throw Error('formato');
+    item.id=uid();item.savedAt=new Date().toISOString();
+    await projectDbRequest('readwrite',store=>store.put(item));await renderProjectLibrary();status('Maestro importado y agregado a la biblioteca');
+  }catch(err){status('No se pudo importar el maestro')}
+  e.target.value='';
+}
+migrateLegacyProjectLibrary();
+
 function addCircleLinePointCompatibility(){
   if(!placingLinePoint)return;
 }
