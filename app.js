@@ -1292,4 +1292,46 @@ function routeInteractionOwnsPoint(sx,sy){
   return !!(hitRouteHandle(sx,sy)||selectedCurveHandle(sx,sy)||nearestCircleHandle(sx,sy)||hitRouteGeometry(sx,sy));
 }
 
+/* FAAS OBSTACLE IMAGE LAYER · imagen independiente entre fondo y recorrido */
+function placeSceneObstacleImage(item){
+  if(!item?.src)return;
+  history();
+  const d=item.dimensions||{};
+  const width=Math.max(1,Number(d.width)||6);
+  const depth=Math.max(1,Number(d.depth)||Number(d.height)||3);
+  const height=Math.max(.05,Number(d.height)||.2);
+  const obstacle={
+    id:uid(),assetId:item.id,name:item.name||'Obstáculo imagen',
+    category:'Obstáculo',description:item.description||'Obstáculo importado',
+    material:item.material,color:item.color,src:item.src,
+    x:W/2,y:H/2,scale:1,rotation:0,opacity:.98,flipX:false,
+    dimensions:{width,depth,height},role:'track',layer:1,
+    kind:'obstacle-image',type:'obstacle-image',lockedLayer:true
+  };
+  sceneObjects.push(obstacle);
+  selectedScene=obstacle;selected=null;routeSelection=null;
+  updateUI();draw();
+  status('Obstáculo colocado entre el área de trabajo y el recorrido');
+}
+const openPreviewBeforeObstacleImage=openPreview;
+openPreview=function(item){
+  const category=String(item?.category||'').toLowerCase();
+  if(item?.src&&category.includes('obst')){
+    imagePreview(item,()=>placeSceneObstacleImage(item));
+    return;
+  }
+  openPreviewBeforeObstacleImage(item);
+};
+const renderAssetsBeforeObstacleImage=renderAssets;
+renderAssets=function(){
+  renderAssetsBeforeObstacleImage();
+  document.querySelectorAll('.asset-item').forEach((card,index)=>{
+    const item=assets[index];
+    if(!item||!String(item.category||'').toLowerCase().includes('obst'))return;
+    card.title='Toca para previsualizar y colocar el obstáculo en la capa intermedia';
+    card.onclick=e=>{e.preventDefault();openPreview(item)};
+    card.ondblclick=e=>{e.preventDefault();openPreview(item)};
+  });
+}
+
 })();
