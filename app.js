@@ -843,7 +843,7 @@ const basePlaceSceneReferenceEnhanced=placeSceneReference;
 placeSceneReference=function(ref){
   basePlaceSceneReferenceEnhanced(ref);
   const o=sceneObjects.at(-1);
-  if(o){o.role='track';o.layer=1;o.opacity=.9;o.flipX=false}
+  if(o){const category=String(ref.category||'').toLowerCase();const isObstacleImage=category.includes('obst');o.role='track';o.layer=1;o.opacity=isObstacleImage?.98:.9;o.flipX=false;if(isObstacleImage){o.kind='obstacle-image';o.type='obstacle-image';o.lockedLayer=true}}
   updateUI();draw();
 };
 
@@ -853,11 +853,13 @@ renderSceneControls=function(){
   if(!selectedScene)return;
   const box=$('#sceneControls');
   if(!box)return;
-  const role=sceneRole(selectedScene);
+  const role=sceneRole(selectedScene);const isObstacleImage=selectedScene.kind==='obstacle-image'||selectedScene.type==='obstacle-image';
   const extra=document.createElement('div');
   extra.innerHTML='<hr style="border-color:#29415e;border-width:1px 0 0;margin:10px 0"><div class="field"><label>Escala independiente</label><input id="sceneScaleWide" type="range" min=".05" max="8" step=".05" value="'+(selectedScene.scale||1)+'"></div><div class="field"><label>Opacidad</label><input id="sceneOpacity" type="range" min=".05" max="1" step=".05" value="'+(selectedScene.opacity==null?.9:selectedScene.opacity)+'"></div><div class="field"><label>Capa de imagen</label><select id="sceneRole"><option value="workarea">Área de trabajo · fondo</option><option value="track">Imagen en pista · sobre el área</option></select></div><div class="row"><button class="btn" id="flipScene">Invertir elemento</button><button class="btn danger" id="deleteSceneEnhanced">Eliminar</button></div>';
+  if(isObstacleImage){const note=document.createElement('p');note.className='tiny';note.textContent='Obstáculo · capa intermedia: sobre el área de trabajo y bajo el recorrido';extra.prepend(note)}
   box.appendChild(extra);
   $('#sceneRole').value=role;
+  if(isObstacleImage)$('#sceneRole').disabled=true;
   $('#sceneScaleWide').oninput=e=>{selectedScene.scale=+e.target.value;draw();};
   $('#sceneOpacity').oninput=e=>{selectedScene.opacity=+e.target.value;draw();};
   $('#sceneRole').onchange=e=>{selectedScene.role=e.target.value;selectedScene.layer=e.target.value==='workarea'?0:1;draw();status(e.target.value==='workarea'?'Imagen enviada al fondo':'Imagen colocada sobre el área de trabajo')};
